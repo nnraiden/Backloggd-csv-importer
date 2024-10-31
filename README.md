@@ -23,11 +23,11 @@ Note that the csrf and cookie tokens do expire, but not for a while. You should 
 An example csv is provided. The default format is below, although it is very easy to adjust the code for your own needs.
 
 Game Name | Platform | Played? | Playing? | Backlog? | Wishlist? | Status | Rating (out of 10)
-----------|---------|--------------|---------|---------|---------
+----------|----------|---------|----------|----------|-----------|--------|-------------------
 Ikaruga | Dreamcast | false | false | true | false | completed | 
 Pokemon Yellow | Game Boy | true | false | false | false | completed | 9
-Metroid Zero Mission | Game Boy Advance | true | false | false | false | completed | 9
-Pokemon Crystal | Game Boy Color | true | false | false | false | completed | 9
-Another Code | Nintendo DS | true | false | false | false | completed | 7
-Ace Attorney Trials and Tribulations | Nintendo DS | true | false | false | false | completed | 8
+Metroid Zero Mission | Game Boy Advance | true | false | false | false | retired | 9
+Pokemon Crystal | Game Boy Color | true | false | false | false | shelved | 9
+Another Code | Nintendo DS | true | false | false | false | abandoned | 7
+Ace Attorney Trials and Tribulations | Nintendo DS | true | false | false | false | played | 8
 Mother | Nintendo Entertainment System | false | false | true | false | completed | 

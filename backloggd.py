@@ -40,20 +40,15 @@ BACKLOGGD_HEADERS = {
   'Cookie': '',
 }
 
-def get_yearbounding_timestamps(year):
-    early = datetime(year, 1, 1)
-    late = datetime(year + 1, 1, 1)
-    return int(early.timestamp()), int(late.timestamp())
-
 def update_cookie(session):
     BACKLOGGD_HEADERS['Cookie'] = "ne_cookies_consent=true; _backloggd_session=" + session
 
 def update_csrf(key):
     BACKLOGGD_HEADERS['X-CSRF-Token'] = key
 
-def get_game_id(name, early, late):
+def get_game_id(name, platform):
     try:
-        body = 'fields name; search "%s"; where release_dates.date >= %s & release_dates.date <= %s;' % (name, early, late)
+        body = 'fields name; search "%s"; where platforms = (%s);' % (name, platform)
         r = s.post(endpoint, headers=headers, data=body)
         j = json.loads(r.text)
         actual_game = [g['id'] for g in j]
@@ -65,7 +60,21 @@ def get_game_id(name, early, late):
         print("Error getting game id " + name)
         return None
 
-def add_game(game_id, rating):
+def get_plaform_id():
+    platforms_endpont='https://api.igdb.com/v4/platforms'
+    try:
+        body = 'fields name; limit 300;'
+        r = s.post(platforms_endpont, headers=headers, data=body)
+        j = json.loads(r.text)
+        if len(j) > 0:
+            return j # this is the ID
+        else:
+            return None # game not found
+    except:
+        print("Error getting platform names")
+        return None        
+
+def add_game(game_id, rating, platform, is_play, is_playing, is_backlog, is_wishlist, status):
     data = {
         'game_id': game_id,
         'playthroughs[0][id]': -1,
@@ -73,18 +82,18 @@ def add_game(game_id, rating):
         'playthroughs[0][rating]': rating,
         'playthroughs[0][review]': '',
         'playthroughs[0][review_spoilers]': 'false',
-        'playthroughs[0][platform]': '',
+        'playthroughs[0][platform]': platform,
         'playthroughs[0][hours]': '',
         'playthroughs[0][minutes]': '',
         'playthroughs[0][is_master]': 'false',
         'playthroughs[0][is_replay]': 'false',
         'playthroughs[0][start_date]': '',
         'playthroughs[0][finish_date]': '',
-        'log[is_play]': 'true',
-        'log[is_playing]': 'false',
-        'log[is_backlog]': 'false',
-        'log[is_wishlist]': 'false',
-        'log[status]': 'completed',
+        'log[is_play]': is_play,
+        'log[is_playing]': is_playing,
+        'log[is_backlog]': is_backlog,
+        'log[is_wishlist]': is_wishlist,
+        'log[status]': status, # played, completed (default), retired, shelved, abandoned
         'log[id]': '',
         'modal_type': 'quick'
     }
@@ -97,6 +106,7 @@ def add_game(game_id, rating):
 # Games with no IDs will be written to text file notfound.txt
 update_cookie(backloggd_cookie)
 update_csrf(backloggd_csrf)
+platforms = get_plaform_id()
 not_found_games = open('notfound.txt','w')
 start_from_row = 1
 index = 0
@@ -107,13 +117,19 @@ with open('games.csv','r') as csvfile:
             index += 1
             continue
         name = row[0]
-        rating = int(row[5])* 2
-        early, late = get_yearbounding_timestamps(int(row[2]))
+        platform_name = row[1]
+        is_play = row[2]
+        is_playing = row[3]
+        is_backlog = row[4]
+        is_wishlist = row[5]
+        status = row[6]
+        rating = row[7]
         trying = True
         while trying:
-            game_id = get_game_id(name, early, late)
+            platform = next(i for i in platforms if i['name'] == platform_name)
+            game_id = get_game_id(name, platform['id'])
             if game_id is not None:
-                status = add_game(game_id, rating)
+                status = add_game(game_id, rating, platform['id'], is_play, is_playing, is_backlog, is_wishlist, status)
                 trying = False
                 if status < 400:
                     print('Added ' + name)
@@ -125,6 +141,6 @@ with open('games.csv','r') as csvfile:
                 else:
                     print('Game already added or headers error ' + name)
             else:
-                not_found_games.write(name + '\n')
+                not_found_games.write(','.join(row) + '\n')
                 trying = False
 not_found_games.close()

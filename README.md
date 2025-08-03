@@ -17,3 +17,6 @@ Backloggd ID can be found by inspecting network requests. Look into any html, sh
 
 ## csv format
 Look at the provided file.
+
+## limitation
+adds games as played.
